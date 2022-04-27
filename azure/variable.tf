@@ -1,9 +1,28 @@
-variable "resource_group_name_prefix" {
-  default     = "rg"
-  description = "Prefix of the resource group name that's combined with a random ID so name is unique in your Azure subscription."
+variable "resource_group_location" {
+  description = "리소스 영역"
+  type        = string
+  default     = "koreacentral"
 }
 
-variable "resource_group_location" {
-  default     = "eastus"
-  description = "Location of the resource group."
+variable "subscription_id" {
+  description = "Enter subscription_id"
+  type        = string
+}
+
+
+variable "client_id" {
+  description = "Enter client_id"
+  type        = string
+}
+
+
+variable "client_secret" {
+  description = "Enter client_secret"
+  type        = string
+}
+
+
+variable "tenant_id" {
+  description = "Enter tenant_id"
+  type        = string
 }
