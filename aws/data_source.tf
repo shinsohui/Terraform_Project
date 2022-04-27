@@ -18,6 +18,20 @@ data "aws_ami" "amazonLinux" {
   }
 }
 
+# data "aws_instance" "project-instance" {
+#   instance_id = "project-instance-id"
+
+#   filter {
+#     name = "instance-id"
+
+#   }
+
+
+# }
+
+
+
+
 # data "aws_ami" "ubuntu_image" {
 #   owners      = ["099720109477"]
 #   most_recent = true
