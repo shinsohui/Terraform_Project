@@ -1,4 +1,4 @@
-module "app_vpc" {
+/*module "app_vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
   name = "app_vpc"
@@ -14,6 +14,7 @@ resource "aws_key_pair" "app_server_key" {
   key_name   = "app_server_key"
   public_key = file("/home/vagrant/.ssh/id_rsa.pub")
 }
+*/
 
 resource "aws_instance" "app_server" {
 
