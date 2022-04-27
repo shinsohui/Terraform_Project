@@ -8,7 +8,6 @@ resource "aws_db_subnet_group" "testSubnetGroup" {
   tags = {
     "Name" = "test-subnet-group"
   }
-
 }
 
 resource "aws_db_instance" "testDB" {

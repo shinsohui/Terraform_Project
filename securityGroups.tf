@@ -13,7 +13,6 @@ resource "aws_security_group" "bastionSG01" {
     to_port     = 22
     protocol    = "tcp"
   }
-
 }
 
 resource "aws_security_group" "publicSG01" {
