@@ -5,7 +5,7 @@
 resource "aws_security_group" "bastionSG01" {
   name        = "bastion-SG"
   description = "Allow all SSH"
-  vpc_id      = aws_vpc.project-vpc.id
+  vpc_id      = module.app_vpc.vpc_id
 
   ingress {
     cidr_blocks = ["0.0.0.0/0"] # 모든 ip 허용
@@ -13,12 +13,20 @@ resource "aws_security_group" "bastionSG01" {
     to_port     = 22
     protocol    = "tcp"
   }
+
+  egress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
+  }  
 }
 
 resource "aws_security_group" "publicSG01" {
   name        = "public-SG-01"
   description = "Allow all HTTP"
-  vpc_id      = aws_vpc.project-vpc.id
+  vpc_id      = module.app_vpc.vpc_id
+
 
   ingress {
     cidr_blocks = ["0.0.0.0/0"]
@@ -39,10 +47,12 @@ resource "aws_security_group" "publicSG01" {
 resource "aws_security_group" "bastion-to-private" {
   name        = "bastion-to-private-sg"
   description = "Allow SSH from Bastion Host"
-  vpc_id      = aws_vpc.project-vpc.id
+  vpc_id      = module.app_vpc.vpc_id
+
 
   ingress {
-    cidr_blocks = ["10.0.10.0/24"] # PublicSubnet1의 cidr_blocks
+    # cidr_blocks = ["10.0.10.0/24"] # PublicSubnet1의 cidr_blocks
+    cidr_blocks = ["${aws_instance.bastionhostEC201.private_ip}/32"]
     from_port   = 22
     protocol    = "tcp"
     to_port     = 22
@@ -60,7 +70,7 @@ resource "aws_security_group" "bastion-to-private" {
 resource "aws_security_group" "privateEC2SG01" {
   name        = "private-ec2-sg-01"
   description = "Allow HTTP from ALB"
-  vpc_id      = aws_vpc.project-vpc.id
+  vpc_id      = module.app_vpc.vpc_id
 
   ingress = [{
     cidr_blocks      = null
@@ -85,12 +95,15 @@ resource "aws_security_group" "privateEC2SG01" {
     self             = false
     to_port          = 0
   }]
+
+
 }
 
 resource "aws_security_group" "privateRDSSG01" {
   name        = "private-rds-sg-01"
-  description = "Allow HTTP from ALB"
-  vpc_id      = aws_vpc.project-vpc.id
+  description = "Allow acceess from private web instance"
+  vpc_id      = module.app_vpc.vpc_id
+
 
   ingress = [{
     cidr_blocks      = null
@@ -116,3 +129,5 @@ resource "aws_security_group" "privateRDSSG01" {
     to_port          = 0
   }]
 }
+
+ 
