@@ -1,188 +1,193 @@
-# 구독 / 리소스 그룹 이름 / 영역 / tags
-resource "azurerm_resource_group" "rg" {
-  name     = "testResourceGroup"
-  location = var.resource_group_location
-  tags = {
-    name = "wp" # 예시
-  }
+# 테라폼 버전 1.1.9
+# provider version 3.3.0
+
+# 1. 리소스 그룹 생성
+resource "azurerm_resource_group" "wp_rg" {
+  name     = "WordpressResourcegroup"
+  location = var.location
 }
 
-# <기본사항> 프로젝트 정보 :구독 / 리소스 그룹  /// 인스턴스 정보 : 이름 / 지역
-# <IP주소>  ipv4 주소 공간 / 서브넷 이름
-# <보안> BastionHost (yes or no) / 방화벽 (yes or no)
-# tags
-
-module "network" {
-  source              = "Azure/network/azurerm"
-  resource_group_name = azurerm_resource_group.rg.name
-  vnet_name           = "test"
-  address_spaces      = ["10.0.0.0/16"]
-  subnet_prefixes     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/26"]
-  subnet_names        = ["webserver", "dbserver", "AzureBastionSubnet"]
-  # Bation Host를 만들기 위해서는 서브넷 이름이 AzureBastionSubnet이고 prifix /26 이상이 있어야함
-  #   subnet_service_endpoints = {
-  #     "subnet1" : ["Microsoft.Sql"], 
-  #     "subnet2" : ["Microsoft.Sql"],
-  #     "subnet3" : ["Microsoft.Sql"]
-  #   }
-
-  depends_on = [azurerm_resource_group.rg]
+# 2. 네트워크 생성
+resource "azurerm_virtual_network" "wp_network" {
+  name                = "Wordpress-vnet"
+  address_space       = ["10.0.0.0/16"]
+  location            = var.location
+  resource_group_name = azurerm_resource_group.wp_rg.name
 }
 
+# 1. Bastion Instance의 서브넷
+resource "azurerm_subnet" "wp-bastion-subnet" {
+  name                 = "Bastion-subnet"
+  resource_group_name  = azurerm_resource_group.wp_rg.name
+  virtual_network_name = azurerm_virtual_network.wp_network.name
+  address_prefixes     = ["10.0.10.0/24"]
+}
 
-# bastion 생성
-
-resource "azurerm_public_ip" "test_public_ip" { # 퍼블릭 아이피 생성
-  name                = "test_public_ip"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+# 1-1. Bastion public IP
+resource "azurerm_public_ip" "wp-bastion-public-ip" {
+  name                = "Bastion-public-ip"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.wp_rg.name
   allocation_method   = "Static"
-  sku                 = "Standard"
 }
 
-resource "azurerm_bastion_host" "test_bastion_host" {
-  name                = "test_bastion_host"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+# 1-2 Bastion 네트워크 인터페이스 생성
+resource "azurerm_network_interface" "wp-bastion-network-interface" {
+  name                = "Bastion-nic"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.wp_rg.name
 
   ip_configuration {
-    name                 = "configuration"
-    subnet_id            = module.network.vnet_subnets[2] # subnet 지정 -- Bastion
-    public_ip_address_id = azurerm_public_ip.test_public_ip.id
-  }
-}
-
-
-# 네트워크 보안그룹 만들기
-resource "azurerm_network_security_group" "test_sg" {
-  name                = "test_sg"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-
-  security_rule {
-    name                       = "SSH" # 이름
-    priority                   = 1001  # 규칙 우선순위
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-}
-
-# # 네트워크 인터페이스 생성
-
-resource "azurerm_network_interface" "test_network_interface" {
-  name                = "test_network_interface"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-
-  ip_configuration {
-    name                          = "myNicConfiguration"
-    subnet_id                     = module.network.vnet_subnets[0]
+    name                          = "Bastion_IPConfiguration"
+    subnet_id                     = azurerm_subnet.wp-bastion-subnet.id
     private_ip_address_allocation = "Dynamic"
-    # public_ip_address_id          = azurerm_public_ip.test_public_ip.id # private test
+    public_ip_address_id          = azurerm_public_ip.wp-bastion-public-ip.id
   }
 }
 
-# Connect the security group to the network interface
-resource "azurerm_network_interface_security_group_association" "test_connet_sg" {
-  network_interface_id      = azurerm_network_interface.test_network_interface.id
-  network_security_group_id = azurerm_network_security_group.test_sg.id
-}
+# 1-3. Bastion VM 생성
+resource "azurerm_virtual_machine" "wp-bastion-vm" {
+  name                  = "Bastion-vm"
+  location              = var.location
+  resource_group_name   = azurerm_resource_group.wp_rg.name
+  network_interface_ids = [azurerm_network_interface.wp-bastion-network-interface.id]
+  vm_size               = "Standard_DS1_v2"
 
-# SSH key 생성
-resource "tls_private_key" "test_ssh" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-
-# vm 생성
-
-resource "azurerm_linux_virtual_machine" "test-vm-webserver" {
-  name                  = "test-vm-webserver"
-  location              = azurerm_resource_group.rg.location
-  resource_group_name   = azurerm_resource_group.rg.name
-  network_interface_ids = [azurerm_network_interface.test_network_interface.id]
-  size                  = "Standard_DS1_v2"
-
-  os_disk {
-    name                 = "myOsDisk"
-    caching              = "ReadWrite"
-    storage_account_type = "Premium_LRS"
-  }
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
+  storage_image_reference {
+    publisher = var.linux_vm_image_publisher
+    offer     = var.linux_vm_image_offer
+    sku       = var.centos_7_sku
     version   = "latest"
   }
 
-  computer_name                   = "myvm"
-  admin_username                  = "azureuser"
-  disable_password_authentication = true
+  storage_os_disk {
+    name              = "Bastion-osdisk"
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = "Standard_LRS"
+  }
 
-  admin_ssh_key {
-    username   = "azureuser"
-    public_key = tls_private_key.test_ssh.public_key_openssh
+  os_profile {
+    computer_name  = var.bastion_computer_name
+    admin_username = var.admin_user
+  }
+
+  os_profile_linux_config {
+    disable_password_authentication = true
+    ssh_keys {
+      path     = "/home/${var.admin_user}/.ssh/authorized_keys"
+      key_data = file("~/.ssh/id_rsa.pub")
+    }
   }
 }
 
-# # 네트워크 인터페이스 생성
 
-resource "azurerm_network_interface" "test_network_interface2" {
-  name                = "test_network_interface2"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+# 2. Web Instance의 서브넷
+resource "azurerm_subnet" "wp-web-subnet" {
+  name                 = "wp-web-subnet"
+  resource_group_name  = azurerm_resource_group.wp_rg.name
+  virtual_network_name = azurerm_virtual_network.wp_network.name
+  address_prefixes     = ["10.0.50.0/24"]
+}
+
+# 2-1. Web 네트워크 인터페이스 생성
+resource "azurerm_network_interface" "wp-web-network-interface" {
+  name                = "Web-nic"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.wp_rg.name
 
   ip_configuration {
-    name                          = "myNicConfiguration2"
-    subnet_id                     = module.network.vnet_subnets[1]
-    private_ip_address_allocation = "Dynamic"
-    # public_ip_address_id          = azurerm_public_ip.test_public_ip.id # private test
+    name                          = "Web_IPConfiguration"
+    subnet_id                     = azurerm_subnet.wp-web-subnet.id
+    private_ip_address_allocation = "Dynamic" # public IP 없음
   }
 }
 
-# Connect the security group to the network interface
-resource "azurerm_network_interface_security_group_association" "test_connet_sg2" {
-  network_interface_id      = azurerm_network_interface.test_network_interface2.id
-  network_security_group_id = azurerm_network_security_group.test_sg.id
+# # 1-3. Web VM 생성
+# resource "azurerm_virtual_machine" "wp-web-vm" {
+#   # count    = 1
+#   # zones    = element(local.zones, count.index)
+
+#   name                  = "Web-vm"
+#   location              = var.location
+#   resource_group_name   = azurerm_resource_group.wp_rg.name
+#   network_interface_ids = [azurerm_network_interface.wp-web-network-interface.id]
+#   vm_size               = "Standard_DS1_v2"
+#   zones                 = ["1"]
+
+#   storage_image_reference {
+#     publisher = var.linux_vm_image_publisher
+#     offer     = var.linux_vm_image_offer
+#     sku       = var.centos_7_sku
+#     version   = "latest"
+#   }
+
+#   storage_os_disk {
+#     name              = "Web-osdisk"
+#     caching           = "ReadWrite"
+#     create_option     = "FromImage"
+#     managed_disk_type = "Standard_LRS"
+#   }
+
+#   os_profile {
+#     computer_name  = var.web_computer_name
+#     admin_username = var.admin_user
+#     admin_password = var.web_admin_password
+#   }
+
+#   os_profile_linux_config {
+#     disable_password_authentication = false
+#     ssh_keys {
+#       path     = "/home/${var.admin_user}/.ssh/authorized_keys"
+#       key_data = file("~/.ssh/id_rsa.pub")
+#     }
+#   }
+# }
+
+# # cloud init
+# data "template_file" "linux-vm-cloud-init" {
+#   template = file("azure-user-data.sh")
+# }
+
+
+# db 만들기
+
+# db서버
+resource "azurerm_mariadb_server" "mariadb-server" {
+  name                = "kopi-mariadb-server1"
+  location            = azurerm_resource_group.wp_rg.location
+  resource_group_name = azurerm_resource_group.wp_rg.name
+
+  administrator_login          = var.mariadb-admin-login
+  administrator_login_password = var.mariadb-admin-password
+
+  sku_name = var.mariadb-sku-name
+  version  = var.mariadb-version
+
+  storage_mb        = var.mariadb-storage
+  auto_grow_enabled = true
+
+  backup_retention_days        = 7
+  geo_redundant_backup_enabled = false # 백업 x
+  # public_network_access_enabled = false # 퍼블릭 접근 X
+  ssl_enforcement_enabled = false
+}
+
+# mariadb DB 생성
+resource "azurerm_mariadb_database" "mariadb-db" {
+  name                = "kopidb"
+  resource_group_name = azurerm_resource_group.wp_rg.name
+  server_name         = azurerm_mariadb_server.mariadb-server.name
+  charset             = "utf8"
+  collation           = "utf8_unicode_ci"
+}
+
+resource "azurerm_mariadb_firewall_rule" "mariadb-fw-rule" {
+  name                = "mariadbOfficeAccess"
+  resource_group_name = azurerm_resource_group.wp_rg.name
+  server_name         = azurerm_mariadb_server.mariadb-server.name
+  start_ip_address    = "0.0.0.0"
+  end_ip_address      = "0.0.0.0" # public 접근 x라서
 }
 
 
-
-# vm 생성
-
-resource "azurerm_linux_virtual_machine" "test-vm-webserver2" {
-  name                  = "test-vm-dbserver"
-  location              = azurerm_resource_group.rg.location
-  resource_group_name   = azurerm_resource_group.rg.name
-  network_interface_ids = [azurerm_network_interface.test_network_interface2.id]
-  size                  = "Standard_DS1_v2"
-
-  os_disk {
-    name                 = "myOsDisk2"
-    caching              = "ReadWrite"
-    storage_account_type = "Premium_LRS"
-  }
-
-  source_image_reference {
-    publisher = "OpenLogic"
-    offer     = "CentOS"
-    sku       = "7_9"
-    version   = "latest"
-  }
-
-  computer_name                   = "myvm"
-  admin_username                  = "azureuser"
-  disable_password_authentication = true
-
-  admin_ssh_key {
-    username   = "azureuser"
-    public_key = tls_private_key.test_ssh.public_key_openssh
-  }
-}
