@@ -10,25 +10,6 @@ resource "aws_db_subnet_group" "testSubnetGroup" {
   }
 }
 
-# ## private rds subnet
-# resource "aws_subnet" "privateRDSSubnet1" {
-#   vpc_id            = aws_vpc.project-vpc.id
-#   cidr_block        = "10.0.100.0/24"
-#   availability_zone = "ap-northeast-2a"
-#   tags = {
-#     "Name" = "project-private-rds-subnet-01"
-#   }
-# }
-
-# resource "aws_subnet" "privateRDSSubnet2" {
-#   vpc_id            = aws_vpc.project-vpc.id
-#   cidr_block        = "10.0.200.0/24"
-#   availability_zone = "ap-northeast-2c"
-#   tags = {
-#     "Name" = "project-private-rds-subnet-02"
-#   }
-# }
-
 resource "aws_db_instance" "testDB" {
   allocated_storage     = 20
   max_allocated_storage = 50
@@ -38,13 +19,18 @@ resource "aws_db_instance" "testDB" {
   engine_version        = "10.5"
   instance_class        = "db.t3.small"
   skip_final_snapshot   = true
-  identifier            = "test-maridb"
-  username              = "root"
-  password              = var.db_password
-  name                  = "testDB"
+  identifier            = "project-db"
+  name                  = "wordpress"     # DB name 
+  username              = "admin"         # 사용자 이름 
+  password              = var.db_password # 패스워드 (adminpass로)
   port                  = "3306"
   vpc_security_group_ids = [
     aws_security_group.privateRDSSG01.id
   ]
+}
+
+# db 엔드포인트 출력
+output "wordpress_db_endpoint" {
+  value = aws_db_instance.testDB.endpoint
 }
 

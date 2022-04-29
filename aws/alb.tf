@@ -11,7 +11,6 @@ resource "aws_alb_target_group" "project-elb-tg" {
   name     = "tset-alb-tg"
   port     = 80
   protocol = "HTTP"
-  # vpc_id   = aws_vpc.project-vpc.id
   vpc_id = module.app_vpc.vpc_id
 }
 
@@ -26,6 +25,11 @@ resource "aws_alb_target_group" "project-elb-tg" {
 #   target_id        = aws_instance.project-EC2-02.id
 #   port             = 80
 # }
+
+resource "aws_autoscaling_attachment" "wp-atsg-attach" {
+  autoscaling_group_name = aws_autoscaling_group.project-ASG.name
+  alb_target_group_arn   = aws_alb_target_group.project-elb-tg.arn
+}
 
 resource "aws_alb_listener" "project-elb-listener" {
   load_balancer_arn = aws_alb.project-elb.arn
