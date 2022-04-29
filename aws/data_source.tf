@@ -18,19 +18,34 @@ data "aws_ami" "amazonLinux" {
   }
 }
 
+# packer로 만든 이미지를 사용하기 위함
+data "aws_ami" "wordpressLinux" {
+  owners      = ["471702632719"] # 내 계정     
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["project-wordpress_web"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+}
+
+
 # data "aws_instance" "project-instance" {
 #   instance_id = "project-instance-id"
-
 #   filter {
 #     name = "instance-id"
-
 #   }
-
-
 # }
-
-
-
 
 # data "aws_ami" "ubuntu_image" {
 #   owners      = ["099720109477"]

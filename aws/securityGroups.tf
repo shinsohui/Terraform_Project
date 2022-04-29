@@ -19,7 +19,7 @@ resource "aws_security_group" "bastionSG01" {
     from_port   = 0
     protocol    = "-1"
     to_port     = 0
-  }  
+  }
 }
 
 resource "aws_security_group" "publicSG01" {
