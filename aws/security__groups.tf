@@ -49,11 +49,10 @@ resource "aws_security_group" "bastion-to-private" {
   description = "Allow SSH from Bastion Host"
   vpc_id      = module.app_vpc.vpc_id
 
-
   ingress {
     # cidr_blocks = ["10.0.10.0/24"] # PublicSubnet1의 cidr_blocks
     cidr_blocks = ["${aws_instance.bastionhostEC201.private_ip}/32"]
-    from_port   = 22
+    from_port   = 22 
     protocol    = "tcp"
     to_port     = 22
   }
@@ -103,7 +102,6 @@ resource "aws_security_group" "privateRDSSG01" {
   name        = "private-rds-sg-01"
   description = "Allow acceess from private web instance"
   vpc_id      = module.app_vpc.vpc_id
-
 
   ingress = [{
     cidr_blocks      = null

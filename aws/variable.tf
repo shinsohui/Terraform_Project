@@ -1,10 +1,4 @@
-variable "db_password" {
-  description = "RDS root user password"
-  type        = string
-  sensitive   = false
-}
-
-# 태그 한번에 관리
+# 태그를 한번에 관리
 variable "project_name" {
   description = "Project Name"
   type        = string

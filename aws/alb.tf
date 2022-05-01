@@ -14,18 +14,6 @@ resource "aws_alb_target_group" "project-elb-tg" {
   vpc_id = module.app_vpc.vpc_id
 }
 
-# resource "aws_alb_target_group_attachment" "privateInstance01" {
-#   target_group_arn = aws_alb_target_group.project-elb-tg.arn
-#   target_id        = aws_instance.project-EC2-01.id
-#   port             = 80
-# }
-
-# resource "aws_alb_target_group_attachment" "privateInstance02" {
-#   target_group_arn = aws_alb_target_group.project-elb-tg.arn
-#   target_id        = aws_instance.project-EC2-02.id
-#   port             = 80
-# }
-
 resource "aws_autoscaling_attachment" "wp-atsg-attach" {
   autoscaling_group_name = aws_autoscaling_group.project-ASG.name
   alb_target_group_arn   = aws_alb_target_group.project-elb-tg.arn

@@ -29,8 +29,8 @@ resource "aws_db_instance" "testDB" {
   ]
 }
 
-# db 엔드포인트 출력
-output "wordpress_db_endpoint" {
-  value = aws_db_instance.testDB.endpoint
+variable "db_password" {
+  description = "RDS root user password"
+  type        = string
+  sensitive   = false
 }
-
