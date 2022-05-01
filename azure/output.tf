@@ -1,12 +1,9 @@
-# output "resource_group_name" {
-#   value = azurerm_resource_group.rg.name
-# }
+# 애플리케이션 게이트웨이 아이피
+output "app_ip" {
+  value = azurerm_public_ip.wp-app-gateway-ip
+}
 
-# output "public_ip_address" {
-#   value = azurerm_public_ip.test_public_ip
-# }
-
-# output "tls_private_key" {
-#  value     = tls_private_key.wp_ssh.private_key_pem
-#  sensitive = true
-# }
+# Bastion 아이피
+output "Bastion_ip_address" {
+  value = azurerm_public_ip.wp-bastion-public-ip
+}

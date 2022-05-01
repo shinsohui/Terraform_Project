@@ -1,19 +1,13 @@
-# # lb만의 리소스그룹이 필요함
-# resource "azurerm_resource_group" "wp-app-gateway-rg" {
-#   name     = "wp-ag-rg"
-#   location = var.location
-# }
-
-# 퍼블릭 아이피 부여
+# Application gateway의 퍼블릭 아이피
 resource "azurerm_public_ip" "wp-app-gateway-ip" {
   name                = "wp-app-gateway-ip"
   resource_group_name = azurerm_resource_group.wp_rg.name
   location            = var.location
   allocation_method   = "Static"
-  sku = "Standard"
+  sku                 = "Standard"
 }
 
-# lb만의 서브넷이 필요함
+# Application gateway만의 서브넷이 필요함
 resource "azurerm_subnet" "frontend" {
   name                 = "frontend"
   resource_group_name  = azurerm_resource_group.wp_rg.name
@@ -21,20 +15,11 @@ resource "azurerm_subnet" "frontend" {
   address_prefixes     = ["10.0.70.0/24"]
 }
 
-locals {
-  backend_address_pool_name      = "${azurerm_virtual_network.wp_network.name}-beap"
-  frontend_port_name             = "${azurerm_virtual_network.wp_network.name}-feport"
-  frontend_ip_configuration_name = "${azurerm_virtual_network.wp_network.name}-feip"
-  http_setting_name              = "${azurerm_virtual_network.wp_network.name}-be-htst"
-  listener_name                  = "${azurerm_virtual_network.wp_network.name}-httplstn"
-  request_routing_rule_name      = "${azurerm_virtual_network.wp_network.name}-rqrt"
-  redirect_configuration_name    = "${azurerm_virtual_network.wp_network.name}-rdrcfg"
-}
-
 resource "azurerm_application_gateway" "wp-app-gateway" {
   name                = "wp-app-gateway"
   resource_group_name = azurerm_resource_group.wp_rg.name
   location            = var.location
+
 
   # Application Gateway에서 사용할 SKU
   sku {
@@ -42,22 +27,34 @@ resource "azurerm_application_gateway" "wp-app-gateway" {
     tier = "Standard_v2"
   }
 
+# 상태체크 프로브
+  probe {
+    interval                                  = 30  # 다음 상태 프로브가 전송되기 전에 대시가는 시간(초)
+    minimum_servers                           = 2   # 최소 서버 0 -> 2로 변경
+    name                                      = local.backend_http_probe  # 프로브 이름
+    path                                      = "/"   # 경로
+    pick_host_name_from_backend_http_settings = true
+    protocol                                  = "Http"  # 프로토콜
+    timeout                                   = 30  # 타임아웃 시간
+    unhealthy_threshold                       = 3   # 노드가 비정상으로 간주되기전에 시도해야하는 재시도 횟수 (비정상 임계값)
+  }
+
   # 오토스케일링 설정
   autoscale_configuration {
-    min_capacity = 4
-    max_capacity = 8
+    min_capacity = 4  # 최소 갯수
+    max_capacity = 8  # 최대 갯수
   }
 
   # Application Gateway 설정
   gateway_ip_configuration {
     name      = "my-gateway-ip-configuration"
-    subnet_id = azurerm_subnet.frontend.id
+    subnet_id = azurerm_subnet.frontend.id    # Application gateway의 서브넷
   }
 
   # 프론트엔드 포트
   frontend_port {
     name = local.frontend_port_name
-    port = 80
+    port = 80   # 80/tcp
   }
 
   # 프론트엔드 IP 설정
@@ -70,7 +67,6 @@ resource "azurerm_application_gateway" "wp-app-gateway" {
   # 백엔드 풀 지정 - 연결대상(vmss)
   backend_address_pool {
     name = local.backend_address_pool_name
-
   }
 
   # 백엔드 http 설정
@@ -80,7 +76,9 @@ resource "azurerm_application_gateway" "wp-app-gateway" {
     # path                  = "/path1/"
     port            = 80     # 백엔드 HTTP 설정에서 사용하는 포트
     protocol        = "Http" # 프로토콜
-    request_timeout = 60     # 요청 제한시간 (초)
+    request_timeout = 120     # 요청 제한시간 (초)
+    probe_name                          = local.backend_http_probe    # 상태체크 프로브 이름
+    pick_host_name_from_backend_address = true
   }
 
   # http 리스너
@@ -91,7 +89,7 @@ resource "azurerm_application_gateway" "wp-app-gateway" {
     protocol                       = "Http" # 프로토콜
   }
 
-  # 회람규칙
+  # 라우팅 규칙
   request_routing_rule {
     name                       = local.request_routing_rule_name # 요청 라우팅 규칙의 이름
     rule_type                  = "Basic"                         # 라우팅 유형

@@ -34,7 +34,7 @@ variable "bastion_computer_name" {
 
 variable "admin_user" {
   type    = string
-  default = "Vagrant"
+  default = "azureuser"
 }
 
 variable "web_computer_name" {
@@ -45,27 +45,23 @@ variable "web_computer_name" {
 variable "subscription_id" {
   description = "Enter subscription_id"
   type        = string
-  default     = 
 }
 
 
 variable "client_id" {
   description = "Enter client_id"
   type        = string
-  default     = 
 }
 
 
 variable "client_secret" {
   description = "Enter client_secret"
   type        = string
-  default     = 
 }
 
 variable "tenant_id" {
   description = "Enter tenant_id"
   type        = string
-  default     = 
 }
 
 
@@ -83,10 +79,12 @@ variable "application_port" {
 variable "mariadb-admin-login" {
   type        = string
   description = "Login to authenticate to mariadb Server"
+  default     = "adminx"
 }
 variable "mariadb-admin-password" {
   type        = string
   description = "Password to authenticate to mariadb Server"
+  default     = "P@ssw0rd"
 }
 variable "mariadb-version" {
   type        = string
@@ -102,4 +100,17 @@ variable "mariadb-storage" {
   type        = string
   description = "mariadb Storage in MB"
   default     = "5120"
+}
+
+
+# -------- 이미지 사용시 ----------
+
+variable "packer_resource_group_name" {
+  description = "Name of the resource group in which the Packer image will be created"
+  default     = "my-image"
+}
+
+variable "packer_image_name" {
+  description = "Name of the Packer image"
+  default     = "wordpress"
 }
