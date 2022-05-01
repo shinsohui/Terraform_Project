@@ -12,7 +12,7 @@ resource "aws_instance" "bastionhostEC201" {
   vpc_security_group_ids = [aws_security_group.bastionSG01.id]
   subnet_id              = module.app_vpc.public_subnets[0]
   key_name               = aws_key_pair.app_server_key.key_name # vagrant의 공개키를 등록함
-
+ 
   # vagrant의 개인키를 이용해 서버에 접속하는 코드
   connection {
     user        = "ec2-user" # host = aws_instance.app_server 가능
@@ -32,15 +32,6 @@ resource "aws_instance" "bastionhostEC201" {
       "sudo chmod 400 /home/ec2-user/.ssh/id_rsa"
     ]
   }
-
-  tags = local.common_tags
-}
-
-output "bastion-instance-private" {
-  value = aws_instance.bastionhostEC201.private_ip
-}
-output "bastion-instance-public" {
-  value = aws_instance.bastionhostEC201.public_ip
 }
 
 # 이미지용 instance 생성하기 
@@ -66,14 +57,6 @@ output "bastion-instance-public" {
 #     aws_instance.instance-for-ami
 #   ]
 # }
-
-# 이미지로부터 실제 사용할 인스턴스 생성하기 
-# 사용자 데이터를 이용해 AMI 이미지를 만든다.
-# packer를 이용함
-
-output "pakcer-image" {
-  value = data.aws_ami.wordpressLinux.id
-}
 
 # web server가 구동될 EC2 instance는 Auto Scaling을 통해 생성할 것이고, 
 # 생성할 때 각 Instance에 적용할 Launch Template을 생성한다.
@@ -123,63 +106,4 @@ resource "aws_launch_template" "project-launch-template" {
     "Name" = "project-ec2-template"
   }
 }
-
-# web server가 구동될 EC2들을 Auto Scaling하기 위한 Auto Scaling Group 생성
-resource "aws_autoscaling_group" "project-ASG" {
-  launch_template {
-    id = aws_launch_template.project-launch-template.id
-
-  }
-
-  desired_capacity = 2 # 원하는 인스턴스의 개수 2개
-  min_size         = 2 # 최소 인스턴스 개수 2개
-  max_size         = 4 # 최대 인스턴스 개수 4개
-
-  health_check_type         = "ELB"
-  health_check_grace_period = 180 # 3분
-  force_delete              = true
-  vpc_zone_identifier       = [module.app_vpc.private_subnets[0], module.app_vpc.private_subnets[1]]
-  # availability_zones        = ["ap-northeast-2a", "ap-northeast-2c"]
-
-}
-
-# resource "aws_instance" "project-EC2-01" {
-#   ami           = data.aws_ami.amazonLinux.id
-#   instance_type = "t2.micro"
-#   vpc_security_group_ids = [
-#     aws_security_group.privateEC2SG01.id,
-#   aws_security_group.bastion-to-private.id]
-
-#   subnet_id = aws_subnet.privateEC2Subnet1.id
-#   key_name  = aws_key_pair.app_server_key.key_name
-
-#   # root_block_device {
-#   #   volume_size = 50
-#   #   volume_type = "gp3"
-#   #   tags = {
-#   #     "Name" = "test-private-ec2-01-vloume-1"
-#   #   }
-#   # }
-
-#   tags = {
-#     "Name" = "test-private-ec2-01"
-#   }
-# }
-
-resource "aws_instance" "real-test-web" {
-  ami           = data.aws_ami.wordpressLinux.id
-  instance_type = "t2.micro"
-  vpc_security_group_ids = [
-    aws_security_group.privateEC2SG01.id,
-    aws_security_group.bastion-to-private.id
-  ]
-  subnet_id = module.app_vpc.private_subnets[0]
-  key_name  = aws_key_pair.app_server_key.key_name
-
-  tags = {
-    "Name" = "wordpress-press"
-  }
-}
-
-
 
