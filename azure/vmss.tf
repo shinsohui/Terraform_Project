@@ -1,25 +1,21 @@
-# 웹서버를 담당할 vmss를 만든다.
-
+# 가상 머신 확장 집합 (Packer wordpress 이미지)
 resource "azurerm_virtual_machine_scale_set" "vmss" {
   name                = "vmscaleset"
   location            = var.location
   resource_group_name = azurerm_resource_group.wp_rg.name
   upgrade_policy_mode = "Automatic" # VMSS의 가상머신에 대한 업그레이드 모드 지정
 
-  zones = ["1", "2"]
+  zones = ["1", "2"]  # VMSS의 zone
 
   sku {
     name     = "Standard_DS1_v2"
     tier     = "Standard"
-    capacity = 2
+    capacity = 4
   }
 
   # 리눅스 머신의 구성정보
   storage_profile_image_reference {
-    publisher = var.linux_vm_image_publisher
-    offer     = var.linux_vm_image_offer
-    sku       = var.centos_7_sku
-    version   = "latest"
+    id = data.azurerm_image.image.id
   }
 
   # 스토리지 프로필 OS 디스크 블록
@@ -42,7 +38,7 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   os_profile {
     computer_name_prefix = var.web_computer_name
     admin_username       = var.admin_user
-    custom_data          = file("azure-user-data.sh") # cloud init
+    custom_data          = file("azure-user-data.sh") # cloud init(sudo setenforce 0 / sudo systemctl restart httpd)
   }
 
   # OS가 리눅스 머신인 경우 설정
@@ -59,10 +55,10 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
     primary                   = true                      # 네트워크 인터페이스 구성에서 생성된 네트워크 인터페이스가 vm의 기본 NIC인지 여부
     network_security_group_id = azurerm_network_security_group.webserver-sg.id
     ip_configuration {
-      name                                         = "IPConfiguration"                                    # ip 구성의 이름
-      subnet_id                                    = azurerm_subnet.wp-web-subnet.id                      # 적용할 서브넷
-      primary                                      = true                                                 # 이 ip config가 기본 구성인지?
-      application_gateway_backend_address_pool_ids = "${azurerm_application_gateway.wp-app-gateway.backend_address_pool[*].id}"
+      name                                         = "IPConfiguration"               # ip 구성의 이름
+      subnet_id                                    = azurerm_subnet.wp-web-subnet.id # 적용할 서브넷
+      primary                                      = true                            # 이 ip config가 기본 구성인지?
+      application_gateway_backend_address_pool_ids = "${azurerm_application_gateway.wp-app-gateway.backend_address_pool[*].id}" # application gateway 백엔드 풀 연결
     }
   }
 }

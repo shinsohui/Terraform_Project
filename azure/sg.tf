@@ -7,9 +7,9 @@ resource "azurerm_network_security_group" "bastion-sg" {
   security_rule {
     name                       = "SSH" # 이름
     priority                   = 1001  # 규칙 우선순위
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
+    direction                  = "Inbound"  # 트래픽의 방향
+    access                     = "Allow"    # 허용 or 거부
+    protocol                   = "Tcp"    # 프로토콜
     source_port_range          = "*"
     destination_port_range     = "22"
     source_address_prefix      = "*"
