@@ -1,5 +1,14 @@
+# VMSS의 Subnet
+resource "azurerm_subnet" "wp-web-subnet" {
+  name                 = "wp-web-subnet"
+  resource_group_name  = azurerm_resource_group.wp_rg.name
+  virtual_network_name = azurerm_virtual_network.wp_network.name
+  address_prefixes     = ["10.0.50.0/24"]
+}
+
 # 가상 머신 확장 집합 (Packer wordpress 이미지)
 resource "azurerm_virtual_machine_scale_set" "vmss" {
+  depends_on = [azurerm_public_ip.wp-app-gateway-ip, azurerm_application_gateway.wp-app-gateway]
   name                = "vmscaleset"
   location            = var.location
   resource_group_name = azurerm_resource_group.wp_rg.name
@@ -38,7 +47,16 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   os_profile {
     computer_name_prefix = var.web_computer_name
     admin_username       = var.admin_user
-    custom_data          = file("azure-user-data.sh") # cloud init(sudo setenforce 0 / sudo systemctl restart httpd)
+    custom_data          = "${base64encode(
+      <<-EOF
+      #!/bin/bash
+      sudo echo -e "\ndefine( 'WP_HOME', 'http://${azurerm_public_ip.wp-app-gateway-ip.ip_address}' );" >> /var/www/html/wordpress/wp-config.php
+      sudo echo -e "\ndefine( 'WP_SITEURL', 'http://${azurerm_public_ip.wp-app-gateway-ip.ip_address}' );" >> /var/www/html/wordpress/wp-config.php
+      sudo setenforce 0
+      sudo systemctl restart httpd
+      sudo systemctl restart mariadb
+      EOF
+    )}"
   }
 
   # OS가 리눅스 머신인 경우 설정

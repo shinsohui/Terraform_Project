@@ -80,26 +80,3 @@ resource "azurerm_virtual_machine" "wp-bastion-vm" {
     }
   }
 }
-
-
-# 2. Web Instance의 서브넷
-resource "azurerm_subnet" "wp-web-subnet" {
-  name                 = "wp-web-subnet"
-  resource_group_name  = azurerm_resource_group.wp_rg.name
-  virtual_network_name = azurerm_virtual_network.wp_network.name
-  address_prefixes     = ["10.0.50.0/24"]
-}
-
-# 2-1. Web 네트워크 인터페이스 생성
-resource "azurerm_network_interface" "wp-web-network-interface" {
-  name                = "Web-nic"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.wp_rg.name
-
-  ip_configuration {
-    name                          = "Web_IPConfiguration"
-    subnet_id                     = azurerm_subnet.wp-web-subnet.id
-    private_ip_address_allocation = "Dynamic" # public IP 없음
-  }
-}
-
