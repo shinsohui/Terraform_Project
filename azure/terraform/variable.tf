@@ -45,23 +45,27 @@ variable "web_computer_name" {
 variable "subscription_id" {
   description = "Enter subscription_id"
   type        = string
+  default = "0e337d72-f370-4cb8-9749-9968126b71df"
 }
 
 
 variable "client_id" {
   description = "Enter client_id"
   type        = string
+  default = "4b3914fd-9548-430d-afce-12cbf51c382b"
 }
 
 
 variable "client_secret" {
   description = "Enter client_secret"
   type        = string
+  default = "87Y-NV3QsuI1s03hrCqI-6OIgxPY_cUu0r"
 }
 
 variable "tenant_id" {
   description = "Enter tenant_id"
   type        = string
+  default = "40c79e45-8666-45ec-9af1-b4a931926789"
 }
 
 

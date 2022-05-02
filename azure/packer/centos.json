@@ -1,0 +1,36 @@
+{
+	"variables": {
+	    "managed_image_resource_group_name": "my-image",
+	    "managed_image_name": "wordpress",
+	    "ssh_username": "azureuser",
+	    "location": "koreacentral",
+	    "playbook_file": "Insert Playbook file path"
+  },
+
+    "builders": [{
+      "type": "azure-arm",
+
+      "client_id": "",
+      "client_secret": "",
+      "tenant_id": "",
+      "subscription_id": "",
+
+      "managed_image_resource_group_name": "{{user `managed_image_resource_group_name`}}",
+      "managed_image_name": "{{user `managed_image_name`}}",
+      "ssh_username": "{{user `ssh_username`}}",
+
+      "os_type": "Linux",
+      "image_publisher": "OpenLogic",
+      "image_offer": "CentOS",
+      "image_sku": "7_9",
+
+      "location": "{{user `location`}}",
+      "vm_size": "Standard_DS2_v2"
+    }],
+    "provisioners": [{
+      "type": "ansible",
+      "playbook_file": "{{user `playbook_file`}}",
+      "extra_arguments": ["--become"],
+      "ansible_env_vars": []
+    }]
+  }

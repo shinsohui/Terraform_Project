@@ -32,7 +32,7 @@ resource "azurerm_mariadb_database" "mariadb-db" {
 resource "azurerm_mariadb_firewall_rule" "mariadb-fw-rule" {
   name                = "mariadbOfficeAccess"
   resource_group_name = azurerm_resource_group.wp_rg.name       # 리소스 그룹
-  server_name         = azurerm_mariadb_server.mariadb-server.Name      # 서버의 이름
+  server_name         = azurerm_mariadb_server.mariadb-server.name      # 서버의 이름
   start_ip_address    = "0.0.0.0"       # IP 주소 범위 설정 (시작 주소)
   end_ip_address      = "255.255.255.255" # IP 주소 범위 설정 (끝 주소)
 }

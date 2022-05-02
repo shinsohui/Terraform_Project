@@ -7,7 +7,7 @@ resource "azurerm_public_ip" "wp-app-gateway-ip" {
   sku                 = "Standard"
 }
 
-# Application gateway만의 서브넷이 필요함
+# Application gateway Subnet
 resource "azurerm_subnet" "frontend" {
   name                 = "frontend"
   resource_group_name  = azurerm_resource_group.wp_rg.name
