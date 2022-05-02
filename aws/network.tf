@@ -1,3 +1,4 @@
+# 모듈을 사용해 vpc 생성 
 module "app_vpc" {
   source = "terraform-aws-modules/vpc/aws"
 

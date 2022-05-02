@@ -34,6 +34,7 @@ resource "aws_instance" "bastionhostEC201" {
   }
 }
 
+# Packer를 사용하지 않을 때 
 # 이미지용 instance 생성하기 
 # resource "aws_instance" "instance-for-ami" {
 #   ami                    = data.aws_ami.amazonLinux.id
@@ -65,7 +66,7 @@ resource "aws_launch_template" "project-launch-template" {
   depends_on = [
     module.app_vpc.public_subnets,
     aws_db_subnet_group.testSubnetGroup,
-    aws_db_instance.testDB # DB를 생성한 후 엔드포인트를 가져와야 함
+    aws_db_instance.testDB # DB를 생성한 후 엔드포인트를 가져와야 하기 때문
   ]
 
   name                                 = "project-launch-template"
@@ -92,14 +93,8 @@ resource "aws_launch_template" "project-launch-template" {
     enabled = true # 모니터링 활성화 
   }
 
-  # network_interfaces {
-  #   associate_public_ip_address = true
-  #   subnet_id = aws_subnet.privateRDSSubnet1.id 
-  #   # 이렇게하면 string 오류는 나지 않는다.              
-  # }
-
   placement {
-    availability_zone = "ap-northeast-2"
+    availability_zone = "ap-northeast-2" # 가용영역 지정
   }
 
   tags = {

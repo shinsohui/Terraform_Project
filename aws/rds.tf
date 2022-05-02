@@ -1,3 +1,4 @@
+# 데이터베이스용 서브넷 지정
 resource "aws_db_subnet_group" "testSubnetGroup" {
   name = "test"
   subnet_ids = [
@@ -10,6 +11,7 @@ resource "aws_db_subnet_group" "testSubnetGroup" {
   }
 }
 
+# RDS 인스턴스 리소스 생성하기
 resource "aws_db_instance" "testDB" {
   allocated_storage     = 20
   max_allocated_storage = 50
@@ -29,7 +31,8 @@ resource "aws_db_instance" "testDB" {
   ]
 }
 
-variable "db_password" {
+# default를 설정하지 않으면 apply 시에 직접 패스워드를 입력해야 한다.
+variable "db_password" { 
   description = "RDS root user password"
   type        = string
   sensitive   = false

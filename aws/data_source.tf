@@ -39,6 +39,7 @@ data "aws_ami" "wordpressLinux" {
   }
 }
 
+# 우분투 이미지 사용을 위함
 # data "aws_ami" "ubuntu_image" {
 #   owners      = ["099720109477"]
 #   most_recent = true
