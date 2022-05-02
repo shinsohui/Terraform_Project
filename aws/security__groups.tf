@@ -22,6 +22,7 @@ resource "aws_security_group" "bastionSG01" {
   }
 }
 
+# 모든 ip로부터의 HTTP 접속을 허용하는 보안 그룹
 resource "aws_security_group" "publicSG01" {
   name        = "public-SG-01"
   description = "Allow all HTTP"
@@ -43,14 +44,14 @@ resource "aws_security_group" "publicSG01" {
   }
 }
 
-## from Bastion Host to private web server
+## Bastion Host에서 wordpress에 접속하는 보안 그룹 
 resource "aws_security_group" "bastion-to-private" {
   name        = "bastion-to-private-sg"
   description = "Allow SSH from Bastion Host"
   vpc_id      = module.app_vpc.vpc_id
 
   ingress {
-    # cidr_blocks = ["10.0.10.0/24"] # PublicSubnet1의 cidr_blocks
+    # Bastion Host만 wordpress 서버에 접속할 수 있도록 보안 그룹 설정
     cidr_blocks = ["${aws_instance.bastionhostEC201.private_ip}/32"]
     from_port   = 22 
     protocol    = "tcp"
@@ -65,7 +66,8 @@ resource "aws_security_group" "bastion-to-private" {
   }
 }
 
-## private Security Group
+# ALB로부터의 HTTP를 허용하는 보안 그룹 
+# 보안 그룹내의 보안 그룹 설정에 외부에서의 HTTP 접속을 허용하는 보안 그룹을 지정한다.
 resource "aws_security_group" "privateEC2SG01" {
   name        = "private-ec2-sg-01"
   description = "Allow HTTP from ALB"
@@ -95,9 +97,9 @@ resource "aws_security_group" "privateEC2SG01" {
     to_port          = 0
   }]
 
-
 }
 
+# wordpress 인스턴스에서만 RDS에 접근할 수 있도록 보안 그룹 설정
 resource "aws_security_group" "privateRDSSG01" {
   name        = "private-rds-sg-01"
   description = "Allow acceess from private web instance"
