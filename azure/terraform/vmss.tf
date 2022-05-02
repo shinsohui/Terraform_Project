@@ -19,7 +19,7 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   sku {
     name     = "Standard_DS1_v2"
     tier     = "Standard"
-    capacity = 4
+    capacity = 16
   }
 
   # 리눅스 머신의 구성정보
