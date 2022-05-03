@@ -96,9 +96,3 @@ resource "azurerm_network_security_group" "webserver-sg" {
     destination_address_prefix = "*"
   }
 }
-
-# 네트워크 보안그룹 할당
-resource "azurerm_network_interface_security_group_association" "web_connet_sg" {
-  network_interface_id      = azurerm_network_interface.wp-web-network-interface.id
-  network_security_group_id = azurerm_network_security_group.webserver-sg.id
-}
