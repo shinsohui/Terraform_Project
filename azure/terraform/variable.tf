@@ -83,12 +83,11 @@ variable "application_port" {
 variable "mariadb-admin-login" {
   type        = string
   description = "Login to authenticate to mariadb Server"
-  default     = ""
+  default     = "adminx"
 }
 variable "mariadb-admin-password" {
   type        = string
   description = "Password to authenticate to mariadb Server"
-  default     = ""
 }
 variable "mariadb-version" {
   type        = string
