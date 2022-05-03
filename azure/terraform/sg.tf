@@ -12,34 +12,8 @@ resource "azurerm_network_security_group" "bastion-sg" {
     protocol                   = "Tcp"    # 프로토콜
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "AllowHTTP"
-    description                = "Allow HTTP"
-    priority                   = 1002
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "80"
-    source_address_prefix      = "Internet"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "AllowDB"
-    description                = "Allow DB"
-    priority                   = 1003
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "3306"
-    source_address_prefix      = "Internet"
-    destination_address_prefix = "*"
+    source_address_prefix      = ""  # Admin IP
+    destination_address_prefix = "10.0.10.0/24" # Bastion Subnet
   }
 }
 
@@ -64,10 +38,10 @@ resource "azurerm_network_security_group" "webserver-sg" {
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range          = "*"
+    source_port_range          = "22"
     destination_port_range     = "22"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
+    source_address_prefix      = "10.0.10.0/24" # Bastion Subnet
+    destination_address_prefix = "10.0.50.0/24" # VMSS Subnet
   }
 
   security_rule {
@@ -77,22 +51,11 @@ resource "azurerm_network_security_group" "webserver-sg" {
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range          = "*"
+    source_port_range          = "80"
     destination_port_range     = "80"
-    source_address_prefix      = "Internet"
-    destination_address_prefix = "*"
+    source_address_prefix      = "${azurerm_public_ip.wp-app-gateway-ip.ip_address}"
+    destination_address_prefix = "10.0.50.0/24" # VMSS Subnet
   }
 
-  security_rule {
-    name                       = "AllowDB"
-    description                = "Allow DB"
-    priority                   = 1003
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "3306"
-    source_address_prefix      = "Internet"
-    destination_address_prefix = "*"
-  }
+
 }
