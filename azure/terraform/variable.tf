@@ -45,27 +45,27 @@ variable "web_computer_name" {
 variable "subscription_id" {
   description = "Enter subscription_id"
   type        = string
-  default = "0e337d72-f370-4cb8-9749-9968126b71df"
+  default = ""
 }
 
 
 variable "client_id" {
   description = "Enter client_id"
   type        = string
-  default = "4b3914fd-9548-430d-afce-12cbf51c382b"
+  default = ""
 }
 
 
 variable "client_secret" {
   description = "Enter client_secret"
   type        = string
-  default = "87Y-NV3QsuI1s03hrCqI-6OIgxPY_cUu0r"
+  default = ""
 }
 
 variable "tenant_id" {
   description = "Enter tenant_id"
   type        = string
-  default = "40c79e45-8666-45ec-9af1-b4a931926789"
+  default = ""
 }
 
 
@@ -83,12 +83,12 @@ variable "application_port" {
 variable "mariadb-admin-login" {
   type        = string
   description = "Login to authenticate to mariadb Server"
-  default     = "adminx"
+  default     = ""
 }
 variable "mariadb-admin-password" {
   type        = string
   description = "Password to authenticate to mariadb Server"
-  default     = "P@ssw0rd"
+  default     = ""
 }
 variable "mariadb-version" {
   type        = string
