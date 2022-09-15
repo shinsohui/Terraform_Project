@@ -8,9 +8,6 @@ AWS 서비스와 IaC 도구인 Ansible과 Terraform를 이용하여 Terraform �
 <br>
 <br>
 ## b. 프로젝트 요약
-
-![프로젝트_역할](https://github.com/shinsohui/Terraform_Project/blob/main/image/%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8_%EC%97%AD%ED%95%A0.png?raw=true)
-
 ![WBS](https://github.com/shinsohui/Terraform_Project/blob/main/image/WBS.png?raw=true)
 <br>
 <br>
