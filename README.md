@@ -1,4 +1,4 @@
-# IaC 도구를 이용하여 AWS에 Wordpress 3-tier 아키텍처 배포하기
+# IaC 도구를 이용하여 AWS에 Wordpress 2-tier 아키텍처 배포하기
 
 # 1. 프로젝트 개요
 
